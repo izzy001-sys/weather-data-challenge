@@ -1,0 +1,44 @@
+To deploy this project in the cloud using AWS, I would split the system into three key parts: 
+the API
+the database, and 
+the scheduled data ingestion.
+Below is how I would approach deploying each:
+
+
+1. Database: Amazon RDS (PostgreSQL)
+I would use Amazon RDS to host the PostgreSQL database.
+RDS is a fully managed service that handles backups, patching, and scaling.
+The database would be placed in a private subnet within a VPC for security.
+Connection credentials would be stored in AWS Secrets Manager.
+
+2. API: AWS Elastic Beanstalk or AWS Fargate
+Option A: Elastic Beanstalk (simpler setup)
+Deploy the Flask API using Elastic Beanstalk.
+Beanstalk manages the provisioning of EC2 instances, load balancing, scaling, and deployment.
+
+Option B: AWS Fargate + ECS (container-based)
+Package the API in a Docker container.
+Push the image to Amazon Elastic Container Registry.
+Deploy and run it using AWS Fargate through ECS for a serverless container-based approach.
+Application Load Balancer with HTTPS enabled via AWS Certificate Manager would be used in either case
+
+
+3. Scheduled Ingestion – AWS Lambda or Fargate Scheduled Task
+Option A: AWS Lambda + EventBridge 
+If the ingestion script is lightweight and completes within Lambda limits (memory, runtime), I would wrap the script in a Lambda function.
+Schedule it using Amazon EventBridge  to run periodically.
+
+Option B: ECS Fargate Scheduled Task
+If the script is more complex or needs more resources/time, I would run it in a container as a Scheduled Task in ECS (Fargate) triggered by EventBridge.
+
+4. Secrets & Configuration Management
+Use AWS Secrets Manager or SSM Parameter Store to store DB credentials and sensitive config.
+Access these secrets securely from both the API and ingestion jobs using IAM roles.
+
+5. CI/CD Pipeline
+Use GitHub Actions or AWS CodePipeline to automate testing and deployment.
+On push to the main branch, the pipeline would:
+Run tests
+Build the Docker image
+Deploy to ECS or Beanstalk
+Trigger infrastructure updates (if needed)
