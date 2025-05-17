@@ -7,14 +7,15 @@ from datetime import datetime
 load_dotenv()
 
 DB_CONFIG = {
-    'dbname': os.getenv('DB_NAME'),
-    'user': os.getenv('DB_USER'),
-    'password': os.getenv('DB_PASSWORD'),
-    'host': os.getenv('DB_HOST'),
-    'port': os.getenv('DB_PORT')
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT"),
 }
 
-DATA_DIR = './code-challenge-template/wx_data'
+DATA_DIR = "./code-challenge-template/wx_data"
+
 
 def ingest_weather_data():
     start_time = datetime.now()
@@ -24,35 +25,38 @@ def ingest_weather_data():
     cur = conn.cursor()
 
     for filename in os.listdir(DATA_DIR):
-        if not filename.endswith('.txt'):
+        if not filename.endswith(".txt"):
             continue
 
-        station_id = filename.replace('.txt', '')
+        station_id = filename.replace(".txt", "")
 
-        with open(os.path.join(DATA_DIR, filename), 'r') as f:
+        with open(os.path.join(DATA_DIR, filename), "r") as f:
             for line in f:
-                parts = line.strip().split('\t')
+                parts = line.strip().split("\t")
                 if len(parts) != 4:
-                    continue  
+                    continue
 
                 date_str, max_temp, min_temp, precip = parts
 
                 # Skip lines with all -9999
-                if all(val == '-9999' for val in [max_temp, min_temp, precip]):
+                if all(val == "-9999" for val in [max_temp, min_temp, precip]):
                     continue
 
                 try:
-                    cur.execute("""
+                    cur.execute(
+                        """
                         INSERT INTO weather (station_id, date, max_temp, min_temp, precipitation)
                         VALUES (%s, %s, %s, %s, %s)
                         ON CONFLICT (station_id, date) DO NOTHING
-                    """, (
-                        station_id,
-                        datetime.strptime(date_str, "%Y%m%d").date(),
-                        int(max_temp) if max_temp != '-9999' else None,
-                        int(min_temp) if min_temp != '-9999' else None,
-                        int(precip) if precip != '-9999' else None
-                    ))
+                    """,
+                        (
+                            station_id,
+                            datetime.strptime(date_str, "%Y%m%d").date(),
+                            int(max_temp) if max_temp != "-9999" else None,
+                            int(min_temp) if min_temp != "-9999" else None,
+                            int(precip) if precip != "-9999" else None,
+                        ),
+                    )
                     total_inserted += cur.rowcount
                 except Exception as e:
                     print(f"Error inserting line: {line.strip()} -> {e}")
@@ -66,5 +70,6 @@ def ingest_weather_data():
     print(f"Ingestion ended at:   {end_time}")
     print(f"Total records ingested: {total_inserted}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     ingest_weather_data()

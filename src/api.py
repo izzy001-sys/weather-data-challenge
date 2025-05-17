@@ -9,14 +9,16 @@ load_dotenv()
 app = Flask(__name__)
 swagger = Swagger(app)  # Initialize Swagger here
 
+
 def get_db_connection():
     return psycopg2.connect(
         dbname=os.getenv("DB_NAME"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT")
+        port=os.getenv("DB_PORT"),
     )
+
 
 @app.route("/api/weather", methods=["GET"])
 def get_weather():
@@ -82,22 +84,19 @@ def get_weather():
                 "date": row[1].strftime("%Y%m%d") if row[1] else None,
                 "max_temp_tenths_c": row[2],
                 "min_temp_tenths_c": row[3],
-                "precip_tenths_mm": row[4]
+                "precip_tenths_mm": row[4],
             }
             for row in rows
         ]
 
-        return jsonify({
-            "page": page,
-            "per_page": per_page,
-            "data": results
-        })
+        return jsonify({"page": page, "per_page": per_page, "data": results})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         if conn:
             conn.close()
+
 
 @app.route("/api/weather/stats", methods=["GET"])
 def get_weather_stats():
@@ -163,22 +162,19 @@ def get_weather_stats():
                 "year": row[1],
                 "avg_max_temp_c": row[2],
                 "avg_min_temp_c": row[3],
-                "total_precip_cm": row[4]
+                "total_precip_cm": row[4],
             }
             for row in rows
         ]
 
-        return jsonify({
-            "page": page,
-            "per_page": per_page,
-            "data": results
-        })
+        return jsonify({"page": page, "per_page": per_page, "data": results})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         if conn:
             conn.close()
+
 
 if __name__ == "__main__":
     app.run(debug=True)

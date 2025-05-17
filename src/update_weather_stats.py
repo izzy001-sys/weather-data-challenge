@@ -11,6 +11,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 
+
 def run_sql_script(filename):
     path = os.path.join(os.path.dirname(__file__), "..", "sql", filename)
     with open(path, "r") as f:
@@ -30,6 +31,7 @@ def run_sql_script(filename):
                 print(f"✅ Successfully executed: {filename}")
     except Exception as e:
         print(f"❌ Error executing {filename}: {e}")
+
 
 if __name__ == "__main__":
     # Only run this once when you create the table
