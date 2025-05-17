@@ -1,4 +1,4 @@
--- Insert yearly weather stats for new (station_id, year) combos
+-- Insert yearly weather stats for new (station_id, year) combination
 INSERT INTO staging.weather_stats (station_id, year, avg_max_temp_celsius, avg_min_temp_celsius, total_precip_cm)
 SELECT
     station_id,
