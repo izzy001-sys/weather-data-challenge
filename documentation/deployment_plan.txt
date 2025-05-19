@@ -2,6 +2,7 @@ To deploy this project in the cloud using AWS, I would split the system into thr
 the API
 the database, and 
 the scheduled data ingestion.
+
 Below is how I would approach deploying each:
 
 

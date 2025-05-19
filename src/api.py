@@ -1,14 +1,14 @@
+import os
 from flask import Flask, jsonify, request
 from flasgger import Swagger
-import psycopg2
-import os
 from dotenv import load_dotenv
+import psycopg2
 
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-swagger = Swagger(app)  # Initialize Swagger here
-
+swagger = Swagger(app)
 
 def get_db_connection():
     return psycopg2.connect(
@@ -30,12 +30,11 @@ def get_weather():
         in: query
         type: string
         required: false
-        description: Filter by station ID
       - name: date
         in: query
         type: string
+        description: Format YYYY-MM-DD
         required: false
-        description: Filter by date in YYYYMMDD format
       - name: page
         in: query
         type: integer
@@ -46,7 +45,7 @@ def get_weather():
         default: 50
     responses:
       200:
-        description: Raw weather data records
+        description: Raw weather records with date and station info
     """
     station_id = request.args.get("station_id")
     date = request.args.get("date")
@@ -55,21 +54,21 @@ def get_weather():
     offset = (page - 1) * per_page
 
     query = """
-        SELECT station_id, date, max_temp, min_temp, precipitation
-        FROM staging.weather
+        SELECT w.station_id, d.full_date, w.max_temp, w.min_temp, w.precipitation
+        FROM fact_weather w
+        JOIN dim_date d ON w.date_id = d.date_id
         WHERE 1=1
     """
     params = []
 
     if station_id:
-        query += " AND station_id = %s"
+        query += " AND w.station_id = %s"
         params.append(station_id)
-
     if date:
-        query += " AND date = %s"
+        query += " AND d.full_date = %s"
         params.append(date)
 
-    query += " ORDER BY station_id, date LIMIT %s OFFSET %s"
+    query += " ORDER BY d.full_date LIMIT %s OFFSET %s"
     params.extend([per_page, offset])
 
     try:
@@ -78,18 +77,17 @@ def get_weather():
             cur.execute(query, params)
             rows = cur.fetchall()
 
-        results = [
+        data = [
             {
                 "station_id": row[0],
-                "date": row[1].strftime("%Y%m%d") if row[1] else None,
+                "date": row[1].isoformat(),
                 "max_temp_tenths_c": row[2],
                 "min_temp_tenths_c": row[3],
-                "precip_tenths_mm": row[4],
-            }
-            for row in rows
+                "precip_tenths_mm": row[4]
+            } for row in rows
         ]
 
-        return jsonify({"page": page, "per_page": per_page, "data": results})
+        return jsonify({"page": page, "per_page": per_page, "data": data})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -101,19 +99,17 @@ def get_weather():
 @app.route("/api/weather/stats", methods=["GET"])
 def get_weather_stats():
     """
-    Get yearly weather statistics
+    Get aggregated yearly weather stats
     ---
     parameters:
       - name: station_id
         in: query
         type: string
         required: false
-        description: Filter by station ID
       - name: year
         in: query
         type: integer
         required: false
-        description: Filter by year
       - name: page
         in: query
         type: integer
@@ -124,7 +120,7 @@ def get_weather_stats():
         default: 50
     responses:
       200:
-        description: List of yearly weather statistics
+        description: Yearly aggregated stats
     """
     station_id = request.args.get("station_id")
     year = request.args.get("year", type=int)
@@ -133,21 +129,21 @@ def get_weather_stats():
     offset = (page - 1) * per_page
 
     query = """
-        SELECT station_id, year, avg_max_temp, avg_min_temp, total_precip_cm
-        FROM staging.weather_stats
+        SELECT f.station_id, y.year, f.avg_max_temp, f.avg_min_temp, f.total_precip_cm
+        FROM fact_weather_stats f
+        JOIN dim_year y ON f.year_id = y.year_id
         WHERE 1=1
     """
     params = []
 
     if station_id:
-        query += " AND station_id = %s"
+        query += " AND f.station_id = %s"
         params.append(station_id)
-
     if year:
-        query += " AND year = %s"
+        query += " AND y.year = %s"
         params.append(year)
 
-    query += " ORDER BY station_id, year LIMIT %s OFFSET %s"
+    query += " ORDER BY f.station_id, y.year LIMIT %s OFFSET %s"
     params.extend([per_page, offset])
 
     try:
@@ -156,18 +152,17 @@ def get_weather_stats():
             cur.execute(query, params)
             rows = cur.fetchall()
 
-        results = [
+        data = [
             {
                 "station_id": row[0],
                 "year": row[1],
                 "avg_max_temp_c": row[2],
                 "avg_min_temp_c": row[3],
-                "total_precip_cm": row[4],
-            }
-            for row in rows
+                "total_precip_cm": row[4]
+            } for row in rows
         ]
 
-        return jsonify({"page": page, "per_page": per_page, "data": results})
+        return jsonify({"page": page, "per_page": per_page, "data": data})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

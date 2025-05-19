@@ -8,11 +8,13 @@ This project ingests historical weather data from local `.txt` files into a Post
 code-challenge-template
 
 -wx_data/ # Raw weather data files
-- sql/ # SQL scripts to create schema and tables
-- src/ # Python scripts and virtual environment files
+- sql/ # SQL scripts to create database, tables and to populate tables
+- src/ # Virtual environment files and python scripts (logic) to execute the sql scripts
     - ingest_weather_data.py
-    - .env # Local DB credentials (not committed)
+    - pop_weather_stats.py
+    - .env # DB credentials   
     - requirements.txt
+- test/ # test.api.py 
 - .gitignore
 - README.md
 
