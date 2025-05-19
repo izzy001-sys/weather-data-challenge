@@ -1,3 +1,5 @@
+Deployment Plan
+
 To deploy this project in the cloud using AWS, I would split the system into three key parts: 
 the API
 the database, and 
