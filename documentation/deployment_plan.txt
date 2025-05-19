@@ -44,4 +44,4 @@ On push to the main branch, the pipeline would:
 Run tests
 Build the Docker image
 Deploy to ECS or Beanstalk
-Trigger infrastructure updates (if needed)
+Trigger infrastructure updates
